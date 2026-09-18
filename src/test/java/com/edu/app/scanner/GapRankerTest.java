@@ -15,7 +15,8 @@ public class GapRankerTest {
     }
 
     private static ScannerConfig config(double minPrice, double maxPrice, double minGap, long minVolume, int topN) {
-        return new ScannerConfig("test-key", minPrice, maxPrice, minGap, minVolume, 15, topN);
+        return new ScannerConfig(ScannerConfig.DataProvider.ALPACA, null, "key-id", "secret",
+                minPrice, maxPrice, minGap, minVolume, 15, topN);
     }
 
     @Test

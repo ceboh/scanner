@@ -1,5 +1,6 @@
 package com.edu.app;
 
+import com.edu.app.scanner.AlpacaMarketDataClient;
 import com.edu.app.scanner.ConsoleLeaderboardRenderer;
 import com.edu.app.scanner.GapScanner;
 import com.edu.app.scanner.MarketDataClient;
@@ -30,7 +31,10 @@ public final class App {
                 .connectTimeout(Duration.ofSeconds(10))
                 .build();
 
-        MarketDataClient client = new PolygonMarketDataClient(httpClient, config.apiKey());
+        MarketDataClient client = switch (config.provider()) {
+            case ALPACA -> new AlpacaMarketDataClient(httpClient, config.alpacaKeyId(), config.alpacaSecretKey());
+            case POLYGON -> new PolygonMarketDataClient(httpClient, config.polygonApiKey());
+        };
         GapScanner scanner = new GapScanner(client, config, new ConsoleLeaderboardRenderer());
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -38,8 +42,8 @@ public final class App {
             System.out.println("\nScanner stopped.");
         }));
 
-        System.out.println("Starting gap-up scanner (polling every " + config.pollIntervalSeconds() + "s)... "
-                + "press Ctrl+C to stop.");
+        System.out.println("Starting gap-up scanner (provider: " + config.provider()
+                + ", polling every " + config.pollIntervalSeconds() + "s)... press Ctrl+C to stop.");
         scanner.start();
     }
 }

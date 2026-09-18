@@ -8,7 +8,10 @@ import java.util.function.Function;
  * without a rebuild.
  */
 public record ScannerConfig(
-        String apiKey,
+        DataProvider provider,
+        String polygonApiKey,
+        String alpacaKeyId,
+        String alpacaSecretKey,
         double minPrice,
         double maxPrice,
         double minGapPercent,
@@ -16,9 +19,26 @@ public record ScannerConfig(
         int pollIntervalSeconds,
         int topN) {
 
+    public enum DataProvider {
+        ALPACA, POLYGON
+    }
+
     public static ScannerConfig fromEnvironment() {
-        String apiKey = readString("POLYGON_API_KEY", null);
-        if (apiKey == null || apiKey.isBlank()) {
+        DataProvider provider = readProvider();
+
+        String polygonApiKey = readString("POLYGON_API_KEY", null);
+        String alpacaKeyId = readString("ALPACA_API_KEY_ID", null);
+        String alpacaSecretKey = readString("ALPACA_API_SECRET_KEY", null);
+
+        if (provider == DataProvider.ALPACA && (isBlank(alpacaKeyId) || isBlank(alpacaSecretKey))) {
+            throw new IllegalStateException(
+                    "ALPACA_API_KEY_ID and ALPACA_API_SECRET_KEY are not both set. Get keys at "
+                            + "https://app.alpaca.markets/paper/dashboard/overview (paper keys work fine for "
+                            + "market data) and export them, e.g. "
+                            + "`export ALPACA_API_KEY_ID=your_key_id` and "
+                            + "`export ALPACA_API_SECRET_KEY=your_secret_key`.");
+        }
+        if (provider == DataProvider.POLYGON && isBlank(polygonApiKey)) {
             throw new IllegalStateException(
                     "POLYGON_API_KEY is not set. Get a free key at https://polygon.io/dashboard/api-keys "
                             + "and export it, e.g. `export POLYGON_API_KEY=your_key_here`. "
@@ -43,7 +63,22 @@ public record ScannerConfig(
             throw new IllegalStateException("SCAN_TOP_N must be >= 1");
         }
 
-        return new ScannerConfig(apiKey, minPrice, maxPrice, minGapPercent, minVolume, pollIntervalSeconds, topN);
+        return new ScannerConfig(provider, polygonApiKey, alpacaKeyId, alpacaSecretKey,
+                minPrice, maxPrice, minGapPercent, minVolume, pollIntervalSeconds, topN);
+    }
+
+    private static DataProvider readProvider() {
+        String raw = readString("MARKET_DATA_PROVIDER", "alpaca");
+        try {
+            return DataProvider.valueOf(raw.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException(
+                    "Invalid MARKET_DATA_PROVIDER: " + raw + " (expected 'alpaca' or 'polygon')", e);
+        }
+    }
+
+    private static boolean isBlank(String s) {
+        return s == null || s.isBlank();
     }
 
     private static String readString(String key, String fallback) {
