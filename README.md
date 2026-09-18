@@ -1,4 +1,4 @@
-# aib — Gap-Up Stock Scanner
+# scanner — Gap-Up Stock Scanner
 
 Continuously scans the US stock market — pre-market and regular trading
 hours alike — and keeps a live, ranked list of $1–$20 stocks that are
@@ -56,7 +56,7 @@ scanner keeps running rather than exiting.
 
    ```bash
    mvn clean package
-   java -jar target/aib-1.0-shaded.jar
+   java -jar target/scanner-1.0-shaded.jar
    ```
 
 Stop with `Ctrl+C`.
@@ -67,7 +67,7 @@ Stop with `Ctrl+C`.
 export MARKET_DATA_PROVIDER=polygon
 export POLYGON_API_KEY=your_key_here
 mvn clean package
-java -jar target/aib-1.0-shaded.jar
+java -jar target/scanner-1.0-shaded.jar
 ```
 
 Get a free key at https://polygon.io/dashboard/api-keys. The free tier
